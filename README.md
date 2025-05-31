@@ -17,5 +17,5 @@ import canopen_sdk
 ## Supported Motor Drivers
 | Name | Available |
 |:----:|:---------:|
-| [eRob](https://github.com/your-org/zero_err) | ✅ |
+| [eRob](https://en.zeroerr.cn/rotary_actuators) | ✅ |
 | [Elmo](https://www.elmomc.com) | ✅ |
