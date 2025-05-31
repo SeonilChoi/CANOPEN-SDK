@@ -5,6 +5,17 @@
 pip install -e .
 ```
 
-## Dependencies
+## Requirements
 - canopen==2.3.0
 - python-can==4.5.0
+
+## Usage
+```
+import canopen_sdk
+```
+
+## Supported Motor Drivers
+| Name | Available |
+|:----:|:---------:|
+| [eRob](https://github.com/your-org/zero_err) | ✅ |
+| [Elmo](https://www.elmomc.com) | ✅ |
