@@ -6,5 +6,5 @@ pip install -e .
 ```
 
 ## Dependencies
-- canopen==1.3.2
-- 
+- canopen==2.3.0
+- python-can==4.5.0
