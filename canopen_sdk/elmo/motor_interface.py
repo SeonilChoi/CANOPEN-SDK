@@ -11,8 +11,8 @@ class MotorInterface(BaseMotorInterface):
 		self.PulseToRad = 2 * PI / self.count_per_revolution
 	    self.RadToPulse = self.count_per_revolution / (2 * PI)
 
-	def initializeMotor(self):
-	    # Fault Reset
+	def initialize_motor(self):
+		# Fault Reset
 		self.node.sdo['controlword'].raw = 0x80
 
 		# Operation Mode
@@ -46,7 +46,7 @@ class MotorInterface(BaseMotorInterface):
 		self.node.sdo['controlword'].raw = 0x0F
 		self.pauseForSeconds(0.1)
 
-	def resetMotor(self):
+	def reset_motor(self):
 		# Fault Reset
 		self.node.sdo['controlword'].raw = 0x80
 		self.pauseForSeconds(0.1)
@@ -63,5 +63,69 @@ class MotorInterface(BaseMotorInterface):
 		self.node.sdo['controlword'].raw = 0x0F
 		self.pauseForSeconds(0.1)
 
-	def 
+	def configure_PDO_mapping(self):
+		# Read PDO setting
+		self.node.tpdo.read()
+		self.node.rpdo.read()
 
+		# TPDO 1 mapping (motor -> controller)
+		self.node.tpdo[1].clear()
+		self.node.tpdo[1].add_variable('statusword')
+		self.node.tpdo[1].add_variable('position_actual_value')
+		self.node.tpdo[1].cob_id = 0x180 + self.node_id
+		self.node.tpdo[1].trans_type = 1
+		self.node.tpdo[1].event_timer = 0
+		self.node.tpdo[1].enabled = True
+		
+		# TPDO 2 mapping
+		self.node.tpdo[2].clear()
+		self.node.tpdo[2].add_variable('torque_actual_value')
+		self.node.tpdo[2].add_variable('velocity_actual_value')
+		self.node.tpdo[2].cob_id = 0x280 + self.node_id
+		self.node.tpdo[2].trans_type = 1
+		self.node.tpdo[2].event_timer = 0
+		self.node.tpdo[2].enabled = True
+
+		# RPDO 1 mapping (controller -> motor)
+		self.node.rpdo[1].clear()
+		self.node.rpdo[1].add_variable('controlword')
+		self.node.rpdo[1].add_variable('target_position')
+		self.node.rpdo[1].cob_id = 0x200 + self.node_id
+		self.node.rpdo[1].trans_type = 0
+		self.node.rpdo[1].enabled = True
+
+		# RPDO 2 mapping
+		self.node.rpdo[2].clear()
+		self.node.rpdo[2].add_variable('target_torque')
+		self.node.rpdo[2].cob_id = 0x300 + self.node_id
+		self.node.rpdo[2].trans_type = 0
+		self.node.rpdo[2].enabled = True
+
+		# Saves and Applies PDO setting
+		self.node.nmt.state = 'PRE-OPERATIONAL'
+		self.node.tpdo.save()
+		self.node.rpdo.save()
+		self.node.nmt.state = 'OPERATIONAL'
+
+	def add_PDO_callback(self):
+		# Add TPDO 1 callback
+		self.network.subscribe(self.node.tpdo[1].cob_id, self.node.tpdo[1].on_message)
+		self.node.tpdo[1].add_callback(self.tpdo_1_callback)
+
+		# Add TPDO 2 callback
+		self.network.subscribe(self.node.tpdo[2].cob_id, self.node.tpdo[2].on_message)
+		self.node.tpdo[2].add_callback(self.tpdo_2_callback)
+
+	def tpdo_1_callback(self, message):
+	    # Read Status word
+		current_statusword = int.from_bytes(message.data[0:2], byteorder='little')
+		
+		# Compare current and previous status word
+		previous_statusword = self.motor_status.get('statusword', None)
+		if previous_statusword is None or previous_statusword != statusword
+			
+		# Read position
+		position = int.from_bytes(message.data[2:5])
+
+
+		

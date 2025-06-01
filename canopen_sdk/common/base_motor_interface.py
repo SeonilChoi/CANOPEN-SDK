@@ -44,87 +44,98 @@ class BaseMotorInterface(ABC):
 		self.previous_velocity = 0
 		self.current_acceleration = 0
 		self.current_torque_sensor = 0
+		self.motor_status = {
+            'statusword': None,
+            'ready_to_switch_on': 0,
+            'switch_on': 0,
+            'operation_enabled': 0,
+            'fault': 0,
+            'voltage_enabled': 0,
+            'quick_stop': 0,
+            'switch_on_disabled': 0,
+            'warning': 0,
+        }
 
 	@abstractmethod
-	def initializeMotor(self):
+	def initialize_motor(self):
 	    """Initialize motor"""
 		pass
 
 	@abstractmethod
-	def resetMotor(self):
+	def reset_motor(self):
 	    """Reset motor"""
 		pass
-
-	def setDeltaTime(self, val=0.01):
-	    """Set dt"""
-		self.dt = value
-
+	
 	@abstractmethod
-	def setPDOMapping(self):
+	def configure_PDO_mapping(self):
 	    """Set PDO mapping"""
 		pass
 
     @abstractmethod
-	def addPDOCallback(self):
+	def add_PDO_callback(self):
 	    """Add PDO callback to the network"""
         pass
 
 	@abstractmethod
-	def commandSwitchOn(self):
+	def command_switch_on(self):
 	    """switch on"""
 		pass
 
-	def resetZeroOffset(self, value):
+	def reset_zero_offset(self, value):
 	    """Reset zero offset"""
 		self.zero_offset = value
 
-	def getZeroOffset(self):
+	def get_zero_offset(self):
 	    """Get zero offset"""
 		return self.zero_offset
+	
+	def set_dt(self, val=0.01):
+	    """Set dt"""
+		self.dt = value
 
 	@abstractmethod
-	def setPosition(self, value):
+	def set_position(self, value):
 	    """Set motor position"""
 		pass
 
 	@abstractmethod
-	def getPosition(self):
+	def get_position(self):
 	    """Get motor position"""
 		pass
 
     @abstractmethod
-	def setVelocity(self, value):
+	def set_velocity(self, value):
 	    """Set motor velocity"""
 		pass
 
 	@abstractmethod
-	def getVelocity(self):
+	def get_velocity(self):
 	    """Get motor velocity"""
 		pass
 
 	@abstractmethod
-	def setAcceleraion(self, value):
+	def set_acceleraion(self, value):
 	    """Set motor acceleration"""
 		pass
 
 	@abstractmethod
-	def getAcceleration(self):
+	def get_acceleration(self):
 	    """Get motor acceleration"""
 
 	@abstractmethod
-	def setTorque(self, value):
+	def set_torque(self, value):
 	    """Set motor torque"""
 		pass
 
 	@abstractmethod
-	def getTorque(self):
+	def get_torque(self):
 	    """Get motor torque"""
 		pass
 
-	def pauseForSeconds(self, value):
+	def pause_for_seconds(self, value):
 	    """Pauses execution for the given number of seconds to complete the command write"""
 		time.sleep(value)
 
-	def toUnsignedInt32(self, value):
+	def to_unsigned_int32(self, value):
 	    """convert a value to an unsigned 32-bit integer"""
 		return ctypes.c_uint32(int(value)).value
