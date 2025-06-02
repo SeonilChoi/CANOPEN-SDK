@@ -7,8 +7,8 @@ setup(
 	author='Ho-sik Shin, Seon-il Choi',
 	author_email='seonilchoi98@gmail.com',
 	install_requires=[
-	    'canopen==2.3.0',
-        'python-can==4.5.0'
+		'canopen==2.3.0',
+		'python-can==4.5.0'
 	],
 	packages=find_packages(exclude=[]),
 	keywords=['canopen'],
