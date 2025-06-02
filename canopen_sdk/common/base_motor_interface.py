@@ -15,12 +15,12 @@ class BaseMotorInterface(ABC):
         'CYCLIC_SYNC_TORQUE':    0x0A
     }
 
-    def __init__(self, node_id, eds_file_path, 
+    def __init__(self, node_id, object_dictionary_file_path, 
                  zero_offset=0, operation_mode='PROFILE_POSITION',
                  profile_velocity=1.0, profile_acceleration=1.0, profile_deceleration=1.0,
                  name=None, count_per_revolution=1000):
         self.node_id = node_id
-        self.eds_file_path = eds_file_path
+        self.object_dictionary_file_path = object_dictionary_file_path
         self.zero_offset = zero_offset
         self.operation_mode = operation_mode
         self.profile_velocity = profile_velocity
@@ -32,17 +32,16 @@ class BaseMotorInterface(ABC):
         self.node = None
         self.network = None
         self.dt = 0.01
-        self.target_position = 0
-        self.target_torque = 0
         self.current_position = 0
         self.current_velocity = 0
         self.previous_velocity = 0
         self.current_acceleration = 0
-        self.current_torque_sensor = 0
+        self.current_torque = 0
+        self.motor_rated_current = 0
         self.motor_status = {
             'statusword': None,
             'ready_to_switch_on': 0,
-            'switch_on': 0,
+            'switched_on': 0,
             'operation_enabled': 0,
             'fault': 0,
             'voltage_enabled': 0,
@@ -82,28 +81,13 @@ class BaseMotorInterface(ABC):
         pass
 
     @abstractmethod
-    def get_position(self):
-        """Get motor position"""
-        pass
-
-    @abstractmethod
     def set_velocity(self, value):
         """Set motor velocity"""
         pass
 
     @abstractmethod
-    def get_velocity(self):
-        """Get motor velocity"""
-        pass
-
-    @abstractmethod
-    def set_acceleraion(self, value):
+    def set_acceleration(self, value):
         """Set motor acceleration"""
-        pass
-
-    @abstractmethod
-    def get_acceleration(self):
-        """Get motor acceleration"""
         pass
 
     @abstractmethod
@@ -111,19 +95,10 @@ class BaseMotorInterface(ABC):
         """Set motor torque"""
         pass
 
-    @abstractmethod
-    def get_torque(self):
-        """Get motor torque"""
-        pass
-
-    def reset_zero_offset(self, value):
-        """Reset zero offset"""
+    def set_zero_offset(self, value):
+        """Set zero offset"""
         self.zero_offset = value
 
-    def get_zero_offset(self):
-        """Get zero offset"""
-        return self.zero_offset
-    
     def set_dt(self, value=0.01):
         """Set dt"""
         self.dt = value
@@ -132,6 +107,50 @@ class BaseMotorInterface(ABC):
         """Pauses execution for the given number of seconds to complete the command write"""
         time.sleep(value)
 
+    def get_zero_offset(self):
+        """Get zero offset"""
+        return self.zero_offset
+
     def to_unsigned_int32(self, value):
         """convert a value to an unsigned 32-bit integer"""
         return ctypes.c_uint32(int(value)).value 
+    
+    def to_signed_int32(self, value):
+        """convert a value to a signed 32-bit integer"""
+        return ctypes.c_int32(int(value)).value
+    
+    def get_position(self):
+        """Get motor position"""
+        return self.current_position
+    
+    def get_velocity(self):
+        """Get motor velocity"""
+        return self.current_velocity
+    
+    def get_acceleration(self):
+        """Get motor acceleration"""
+        return self.current_acceleration
+
+    def get_torque(self):
+        """Get motor torque"""
+        return self.current_torque
+    
+    def get_motor_state(self):
+        """Get motor state"""
+        return {
+            'node_id': self.node_id,
+            'name': self.name,
+            'position': self.current_position,
+            'velocity': self.current_velocity,
+            'acceleration': self.current_acceleration,
+            'torque': self.current_torque,
+            'statusword': self.motor_status['statusword'],
+            'ready_to_switch_on': self.motor_status['ready_to_switch_on'],
+            'switched_on': self.motor_status['switched_on'],
+            'operation_enabled': self.motor_status['operation_enabled'],
+            'fault': self.motor_status['fault'],
+            'voltage_enabled': self.motor_status['voltage_enabled'],
+            'quick_stop': self.motor_status['quick_stop'],
+            'switch_on_disabled': self.motor_status['switch_on_disabled'],
+            'warning': self.motor_status['warning'],
+        }
