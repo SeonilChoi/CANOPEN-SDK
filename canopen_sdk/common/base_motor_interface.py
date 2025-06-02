@@ -76,6 +76,11 @@ class BaseMotorInterface(ABC):
         pass
 
     @abstractmethod
+    def command_quick_stop(self):
+        """quick stop"""
+        pass
+
+    @abstractmethod
     def set_position(self, value):
         """Set motor position"""
         pass
@@ -154,3 +159,8 @@ class BaseMotorInterface(ABC):
             'switch_on_disabled': self.motor_status['switch_on_disabled'],
             'warning': self.motor_status['warning'],
         }
+    
+    @abstractmethod
+    def get_error_code(self):
+        """Get error code"""
+        pass

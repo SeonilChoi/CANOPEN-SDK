@@ -1,4 +1,3 @@
-import os
 from canopen_sdk.common import BaseMotorInterface
 
 PI = 3.141592653589793
@@ -179,6 +178,11 @@ class ELMO(BaseMotorInterface):
         self.node.sdo['controlword'].raw = 0x0F
         self.pause_for_seconds(0.1)
 
+    def command_quick_stop(self):
+        # Quick Stop
+        self.node.sdo['controlword'].raw = 0x02
+        self.pause_for_seconds(0.1)
+
     def set_position(self, value):
         # New set-point
         self.node.rpdo[1]['controlword'].raw = 0x3F
@@ -208,3 +212,8 @@ class ELMO(BaseMotorInterface):
         torque = (value * 1000) / self.motor_rated_current
         self.node.rpdo[2]['target_torque'].raw = self.to_signed_int16(torque)
         self.node.rpdo[2].transmit()
+
+    def get_error_code(self):
+        # Error Code
+        error_code = self.node.sdo['error_code'].raw
+        return error_code
