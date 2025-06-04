@@ -12,16 +12,15 @@ def load_motor_manager(motor_config_file_path, channel='can0', bustype='socketca
     # Load Motor Config
     with open(motor_config_file_path, 'r') as f:
         motor_configs = json.load(f)
+    motor_configs = motor_configs.get('motors', [])
 
     # Create Motor Manager
     motor_manager = MotorManager(channel=channel, bustype=bustype, bitrate=bitrate)
 
     # Add motors to manager
     for motor_config in motor_configs:
-        if motor_config['vendor'] == 'elmo':
+        if motor_config['vendor_type'] == 'elmo':
             motor = ELMOLoader.load_motor(motor_config)
             motor_manager.add_motor(motor)
-        else:
-            raise ValueError(f"Unsupported vendor: {motor_config['vendor']}")
 
     return motor_manager

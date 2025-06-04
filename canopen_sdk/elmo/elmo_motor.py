@@ -185,11 +185,16 @@ class ELMO(BaseMotorInterface):
 
     def set_position(self, value):
         # New set-point
-        self.node.rpdo[1]['controlword'].raw = 0x3F
-
+        
         # Write Target Position
         position = value * self.RadToPulse + self.zero_offset
         self.node.rpdo[1]['target_position'].raw = self.to_signed_int32(position)
+        self.node.rpdo[1][0x6040].raw = 0x3F
+        self.node.rpdo[1].transmit()
+        self.pause_for_seconds(0.001)
+
+        # Enable operation
+        self.node.rpdo[1][0x6040].raw = 0x0F
         self.node.rpdo[1].transmit()
 
     def set_velocity(self, value):

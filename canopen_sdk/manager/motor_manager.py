@@ -87,7 +87,7 @@ class MotorManager:
             motor.set_dt(interval)
 
         # Start Sync
-        self.network.sync.start()
+        self.network.sync.start(interval)
         
     def stop_sync_all_motors(self):
         for motor in self.motors.values():
@@ -99,21 +99,21 @@ class MotorManager:
         # Stop all nodes
         self.network.nmt.send_command(0x02)
         
-    def set_positions(self, node_id, value):
-        if node_id in self.motors:
-            self.motors[node_id].set_position(value)
+    def set_position(self, name, value):
+        if name in self.motors:
+            self.motors[name].set_position(value)
     
-    def set_velocities(self, node_id, value):
+    def set_velocity(self, name, value):
         """This function is not implemented for the base class"""
         pass
 
-    def set_accelerations(self, node_id, value):
+    def set_acceleration(self, name, value):
         """This function is not implemented for the base class"""
         pass
 
-    def set_torques(self, node_id, value):
-        if node_id in self.motors:
-            self.motors[node_id].set_torque(value)
+    def set_torque(self, name, value):
+        if name in self.motors:
+            self.motors[name].set_torque(value)
         
     def get_positions(self):
         positions = {}
@@ -151,4 +151,23 @@ class MotorManager:
             error_codes[name] = motor.get_error_code()
         return error_codes
     
-    
+    def check_motor_states(self):
+        is_error = False
+
+        motor_states = self.get_motor_states()
+        for name, state in motor_states.items():
+            if state['fault'] is True:
+                is_error = True
+                break
+
+            if state['switch_on_disabled'] is True:
+                is_error = True
+                break
+
+            if state['operation_enabled'] is False:
+                is_error = True
+                break
+        if is_error:
+            self.stop_sync_all_motors()
+            return is_error
+        return is_error

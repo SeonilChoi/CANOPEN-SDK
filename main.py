@@ -1,15 +1,18 @@
-from canopen_sdk.elmo import ELMO, ELMOLoader
+import time
+from canopen_sdk.manager.manager_loader import load_motor_manager
 
-motor_config = {
-    'node_id': 1,
-    'object_dictionary_file_path': 'canopen_sdk/elmo/elmo.dcf',
-    'zero_offset': 0,
-    'operation_mode': 'PROFILE_POSITION',
-    'profile_velocity': 1.0,
-    'profile_acceleration': 1.0,
-    'profile_deceleration': 1.0,
-    'name': 'elmo_motor',
-    'count_per_revolution': 1000
-}
+motor_manager = load_motor_manager('config/motor_config.json')
+motor_manager.start_sync_all_motors()
 
-motor = ELMOLoader.load_motor(motor_config)
+positions = motor_manager.get_positions()
+print(positions)
+
+motor_manager.set_position('j_elmo', 3.141592*5)
+time.sleep(10.0)
+positions = motor_manager.get_positions()
+print(positions)
+
+motor_manager.set_position('j_elmo', 0.0)
+time.sleep(10.0)
+positions = motor_manager.get_positions()
+print(positions)
