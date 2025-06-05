@@ -10,7 +10,7 @@ class ELMO(BaseMotorInterface):
         super().__init__(node_id, object_dictionary_file_path, zero_offset, operation_mode,
                          profile_velocity, profile_acceleration, profile_deceleration,
                          name, count_per_revolution)
-        self.PulseToRad = 2 * PI / self.count_per_revolution
+        self.PulseToRad = (2 * PI) / self.count_per_revolution
         self.RadToPulse = self.count_per_revolution / (2 * PI)
         self.rated_torque = 1.0
 
@@ -23,18 +23,21 @@ class ELMO(BaseMotorInterface):
         self.pause_for_seconds(0.1)
 
         # Profile Velocity (pulse/s)
-        self.node.sdo['profile_velocity'].raw = self.to_unsigned_int32(
-            self.profile_velocity * self.RadToPulse)
+        #self.node.sdo['profile_velocity'].raw = self.to_unsigned_int32(
+        #    self.profile_velocity * self.RadToPulse)
+        self.node.sdo['profile_velocity'].raw = 260000
         self.pause_for_seconds(0.1)
 
         # Profile Acceleration (pulse/s^2)
-        self.node.sdo['profile_acceleration'].raw = self.to_unsigned_int32(
-            self.profile_acceleration * self.RadToPulse)
+        #self.node.sdo['profile_acceleration'].raw = self.to_unsigned_int32(
+        #    self.profile_acceleration * self.RadToPulse)
+        self.node.sdo['profile_acceleration'].raw = 320000
         self.pause_for_seconds(0.1)
 
         # Profile Deceleration (pulse/s^2)
-        self.node.sdo['profile_deceleration'].raw = self.to_unsigned_int32(
-            self.profile_deceleration * self.RadToPulse)
+        #self.node.sdo['profile_deceleration'].raw = self.to_unsigned_int32(
+        #    self.profile_deceleration * self.RadToPulse)
+        self.node.sdo['profile_deceleration'].raw = 160000
         self.pause_for_seconds(0.1)
 
         # Linear Lamp
@@ -112,6 +115,7 @@ class ELMO(BaseMotorInterface):
 
         # Read Motor Rated Current (mA)
         self.motor_rated_current = self.node.sdo['motor_rated_current'].raw
+        self.pause_for_seconds(0.1)
 
     def add_PDO_callback(self):
         # Add TPDO 1 callback
@@ -184,19 +188,20 @@ class ELMO(BaseMotorInterface):
         self.pause_for_seconds(0.1)
 
     def set_position(self, value):
-        # New set-point
-        
         # Write Target Position
         position = value * self.RadToPulse + self.zero_offset
         self.node.rpdo[1]['target_position'].raw = self.to_signed_int32(position)
-        self.node.rpdo[1][0x6040].raw = 0x3F
+    
+        # Enable Operation
+        self.node.rpdo[1]['controlword'].raw = 0x0F
         self.node.rpdo[1].transmit()
-        self.pause_for_seconds(0.001)
+        self.pause_for_seconds(0.01)
 
-        # Enable operation
-        self.node.rpdo[1][0x6040].raw = 0x0F
+        # New Set-point
+        self.node.rpdo[1]['controlword'].raw = 0x3F
         self.node.rpdo[1].transmit()
-
+        self.pause_for_seconds(0.01)
+        
     def set_velocity(self, value):
         """
         This function is not implemented for the ELMO motor.
@@ -210,13 +215,14 @@ class ELMO(BaseMotorInterface):
         pass
 
     def set_torque(self, value):
-        # Enable operation
-        self.node.rpdo[1]['controlword'].raw = 0x0F 
-        
         # Write Target Torque
         torque = (value * 1000) / self.motor_rated_current
         self.node.rpdo[2]['target_torque'].raw = self.to_signed_int16(torque)
-        self.node.rpdo[2].transmit()
+
+        # Enable Operation
+        self.node.rpdo[1]['controlword'].raw = 0x0F
+        self.node.rpdo[1].transmit()
+        self.pause_for_seconds(0.01)
 
     def get_error_code(self):
         # Error Code

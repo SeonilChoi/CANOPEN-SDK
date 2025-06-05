@@ -1,8 +1,8 @@
 import os
 import json
-from canopen_sdk.manager.motor_manager import MotorManager
 
 from canopen_sdk.elmo import ELMOLoader
+from canopen_sdk.manager import MotorManager
 
 def load_motor_manager(motor_config_file_path, channel='can0', bustype='socketcan', bitrate=1000000):
     # Check if file exists
