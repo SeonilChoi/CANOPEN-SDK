@@ -1,6 +1,7 @@
-from abc import ABC, abstractmethod
 import time
 import ctypes
+from abc import ABC, abstractmethod
+from canopen_sdk.logger import Logger
 
 class BaseMotorInterface(ABC):
     OPERATION_MODES = {
@@ -49,7 +50,8 @@ class BaseMotorInterface(ABC):
             'switch_on_disabled': 0,
             'warning': 0,
         }
-
+        self.logger = Logger(f'logs/{self.name}.csv')
+        
     @abstractmethod
     def initialize_motor(self):
         """Initialize motor"""

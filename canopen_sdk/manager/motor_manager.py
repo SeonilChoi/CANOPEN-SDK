@@ -1,5 +1,5 @@
-import canopen
 import time
+import canopen
 
 class MotorManager:
     def __init__(self, channel='can0', bustype='socketcan', bitrate=1000000):
@@ -25,11 +25,11 @@ class MotorManager:
     def reset_all_motors(self):
         # Stop
         self.network.nmt.send_command(0x02)
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
 
         # Reset
         self.network.nmt.send_command(0x82)
-        time.sleep(1.0)
+        self.pause_for_seconds(1.0)
 
         # Reset All Motors
         for motor in self.motors.values():
@@ -37,13 +37,13 @@ class MotorManager:
 
         # Start
         self.network.nmt.send_command(0x01)
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
         
     def initialize_all_motors(self):
         # Initialize All Motors
         for motor in self.motors.values():
             motor.initialize_motor()
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
 
     def configure_all_PDO_mapping(self):
         # Configure PDO Mapping
@@ -52,19 +52,19 @@ class MotorManager:
         
         # Start
         self.network.nmt.send_command(0x01)
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
         
     def command_all_switches_on(self):
         # Command All Switches On
         for motor in self.motors.values():
             motor.command_switch_on()
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
 
     def add_all_PDO_callbacks(self):
         # Add PDO Callbacks
         for motor in self.motors.values():
             motor.add_PDO_callback()
-        time.sleep(0.5)
+        self.pause_for_seconds(0.5)
 
     def start_sync_all_motors(self, interval=0.01):
         # Reset
@@ -153,9 +153,8 @@ class MotorManager:
     
     def check_motor_states(self):
         is_error = False
-
         motor_states = self.get_motor_states()
-        for name, state in motor_states.items():
+        for _, state in motor_states.items():
             if state['fault'] is True:
                 is_error = True
                 break
@@ -168,6 +167,10 @@ class MotorManager:
                 is_error = True
                 break
         if is_error:
+            error_codes = self.get_error_codes()
             self.stop_sync_all_motors()
-            return is_error
-        return is_error
+            return is_error, error_codes
+        return is_error, None
+    
+    def pause_for_seconds(self, value):
+        time.sleep(value)

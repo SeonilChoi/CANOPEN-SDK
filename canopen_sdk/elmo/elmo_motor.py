@@ -133,28 +133,36 @@ class ELMO(BaseMotorInterface):
         # Compare current and previous status word and update motor status
         previous_statusword = self.motor_status.get('statusword', None)
         if previous_statusword is None or previous_statusword != current_statusword:
-            is_ready_to_switch_on = bool(current_statusword & (1 << 0))
-            is_switched_on = bool(current_statusword & (1 << 1))
-            is_operation_enabled = bool(current_statusword & (1 << 2))
-            is_fault = bool(current_statusword & (1 << 3))
-            is_voltage_enabled = bool(current_statusword & (1 << 4))
-            is_quick_stop = bool(current_statusword & (1 << 5))
-            is_switch_on_disabled = bool(current_statusword & (1 << 6))
-            is_warning = bool(current_statusword & (1 << 7))
-
             self.motor_status['statusword'] = current_statusword
-            self.motor_status['ready_to_switch_on'] = is_ready_to_switch_on
-            self.motor_status['switched_on'] = is_switched_on
-            self.motor_status['operation_enabled'] = is_operation_enabled
-            self.motor_status['fault'] = is_fault
-            self.motor_status['voltage_enabled'] = is_voltage_enabled
-            self.motor_status['quick_stop'] = is_quick_stop
-            self.motor_status['switch_on_disabled'] = is_switch_on_disabled
-            self.motor_status['warning'] = is_warning
+            self.motor_status['ready_to_switch_on'] = bool(current_statusword & (1 << 0))
+            self.motor_status['switched_on'] = bool(current_statusword & (1 << 1))
+            self.motor_status['operation_enabled'] = bool(current_statusword & (1 << 2))
+            self.motor_status['fault'] = bool(current_statusword & (1 << 3))
+            self.motor_status['voltage_enabled'] = bool(current_statusword & (1 << 4))
+            self.motor_status['quick_stop'] = bool(current_statusword & (1 << 5))
+            self.motor_status['switch_on_disabled'] = bool(current_statusword & (1 << 6))
+            self.motor_status['warning'] = bool(current_statusword & (1 << 7))
             
         # Read position
         position = int.from_bytes(message.data[2:6], byteorder='little')
         self.current_position = (position - self.zero_offset) * self.PulseToRad
+        
+        # Write to logger
+        self.logger.write_key_values({
+            'position': self.current_position,
+            'torque': self.current_torque,
+            'velocity': self.current_velocity,
+            'acceleration': self.current_acceleration,
+            'statusword': self.motor_status['statusword'],
+            'ready_to_switch_on': self.motor_status['ready_to_switch_on'],
+            'switched_on': self.motor_status['switched_on'],
+            'operation_enabled': self.motor_status['operation_enabled'],
+            'fault': self.motor_status['fault'],
+            'voltage_enabled': self.motor_status['voltage_enabled'],
+            'quick_stop': self.motor_status['quick_stop'],
+            'switch_on_disabled': self.motor_status['switch_on_disabled'],
+            'warning': self.motor_status['warning']
+        })
 
     def tpdo_2_callback(self, message):
         # Read Torque
@@ -168,7 +176,7 @@ class ELMO(BaseMotorInterface):
         # Compute Acceleration
         self.current_acceleration = (self.current_velocity - self.previous_velocity) / self.dt
         self.previous_velocity = self.current_velocity
-
+        
     def command_switch_on(self):
         # Shutdown
         self.node.sdo['controlword'].raw = 0x06
@@ -186,6 +194,8 @@ class ELMO(BaseMotorInterface):
         # Quick Stop
         self.node.sdo['controlword'].raw = 0x02
         self.pause_for_seconds(0.1)
+        
+        self.logger.close()
 
     def set_position(self, value):
         # Write Target Position
