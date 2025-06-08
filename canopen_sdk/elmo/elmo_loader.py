@@ -11,4 +11,4 @@ class ELMOLoader:
                     motor_config['zero_offset'], motor_config['operation_mode'],
                     motor_config['profile_velocity'], motor_config['profile_acceleration'],
                     motor_config['profile_deceleration'], motor_config['name'],
-                    motor_config['count_per_revolution'])
+                    motor_config['pulse_per_revolution'])

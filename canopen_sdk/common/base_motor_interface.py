@@ -8,7 +8,6 @@ class BaseMotorInterface(ABC):
         'PROFILE_POSITION':      0x01,
         'PROFILE_VELOCITY':      0x03,
         'PROFILE_TORQUE':        0x04,
-        'RESERVED':              0x05,
         'HOMING':                0x06,
         'INTERPOLATED_POSITION': 0x07,
         'CYCLIC_SYNC_POSITION':  0x08,
@@ -19,7 +18,7 @@ class BaseMotorInterface(ABC):
     def __init__(self, node_id, object_dictionary_file_path, 
                  zero_offset=0, operation_mode='PROFILE_POSITION',
                  profile_velocity=1.0, profile_acceleration=1.0, profile_deceleration=1.0,
-                 name=None, count_per_revolution=1000):
+                 name=None, pulse_per_revolution=1000):
         self.node_id = node_id
         self.object_dictionary_file_path = object_dictionary_file_path
         self.zero_offset = zero_offset
@@ -28,7 +27,7 @@ class BaseMotorInterface(ABC):
         self.profile_acceleration = profile_acceleration
         self.profile_deceleration = profile_deceleration
         self.name = name if name is not None else f"joint_{node_id}"
-        self.count_per_revolution = count_per_revolution
+        self.pulse_per_revolution = pulse_per_revolution
 
         self.node = None
         self.network = None
@@ -63,12 +62,12 @@ class BaseMotorInterface(ABC):
         pass
     
     @abstractmethod
-    def configure_PDO_mapping(self):
+    def setup_pdo_mapping(self):
         """Set PDO mapping"""
         pass
 
     @abstractmethod
-    def add_PDO_callback(self):
+    def add_pdo_callback(self):
         """Add PDO callback to the network"""
         pass
 
