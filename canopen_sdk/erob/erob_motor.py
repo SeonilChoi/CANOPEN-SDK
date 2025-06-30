@@ -72,7 +72,7 @@ class EROB(BaseMotorInterface):
         # Enable Operation
         self.node.sdo['Controlword'].raw = 0x0F
         self.pause_for_seconds(0.1)
-        
+       
     def setup_pdo_mapping(self):
         # Read PDO setting
         self.node.tpdo.read()
@@ -99,17 +99,17 @@ class EROB(BaseMotorInterface):
         # RPDO 1 mapping (controller -> motor)
         self.node.rpdo[1].clear()
         self.node.rpdo[1].add_variable('Controlword')
-        self.node.rpdo[1].add_variable('Target position')
+        self.node.rpdo[1].add_variable('Target Position')
         self.node.rpdo[1].cob_id = 0x200 + self.node_id
-        self.node.rpdo[1].trans_type = 0
+        self.node.rpdo[1].trans_type = 255
         self.node.rpdo[1].enabled = True
 
         # RPDO 2 mapping
         self.node.rpdo[2].clear()
         self.node.rpdo[2].add_variable('Controlword')
-        self.node.rpdo[2].add_variable('Target position')
+        self.node.rpdo[2].add_variable('Target torque')
         self.node.rpdo[2].cob_id = 0x300 + self.node_id
-        self.node.rpdo[2].trans_type = 0
+        self.node.rpdo[2].trans_type = 255
         self.node.rpdo[2].enabled = True
 
         # Saves and Applies PDO setting
@@ -203,20 +203,15 @@ class EROB(BaseMotorInterface):
         # Close logger
         self.logger.close()
         
-    def set_position(self, value):
+    def set_position(self, value):        
         # Write Target Position
         position = value * self.RadToPulse + self.zero_offset
-        self.node.rpdo[1]['Target position'].raw = self.to_signed_int32(position)
-
-        # Enable Operation
-        self.node.rpdo[1]['Controlword'].raw = 0x0F
+        self.node.rpdo[1]['Target Position'].raw = self.to_signed_int32(position)
+        
+        # New set-point & Change set immediately
+        self.node.rpdo[1]['Controlword'].raw = 0x103F # I don't understand why it works...
         self.node.rpdo[1].transmit()
-        self.pause_for_seconds(0.01)
-
-        # New Set-point
-        self.node.rpdo[1]['Controlword'].raw = 0x3F 
-        self.node.rpdo[1].transmit()
-        self.pause_for_seconds(0.01)
+        self.pause_for_seconds(0.1)
         
     def set_velocity(self, value):
         """
@@ -236,12 +231,12 @@ class EROB(BaseMotorInterface):
         self.node.rpdo[2]['Target torque'].raw = self.to_signed_int16(torque)
 
         # Enable Operation
-        self.node.rpdo[2]['Controlword'].raw = 0x0F
+        self.node.rpdo[2]['Controlword'].raw = 0x3F
         self.node.rpdo[2].transmit()
         self.pause_for_seconds(0.01)
 
         # New Set-point
-        self.node.rpdo[2]['Controlword'].raw = 0x3F 
+        self.node.rpdo[2]['Controlword'].raw = 0x0F 
         self.node.rpdo[2].transmit()
         self.pause_for_seconds(0.01)
     
@@ -249,3 +244,4 @@ class EROB(BaseMotorInterface):
         # Error Code
         error_code = self.node.sdo['Error code'].raw
         return error_code
+

@@ -2,6 +2,7 @@ import os
 import json
 
 from canopen_sdk.elmo import ELMOLoader
+from canopen_sdk.erob import EROBLoader
 from canopen_sdk.manager import MotorManager
 
 def load_motor_manager(motor_config_file_path, channel='can0', bustype='socketcan', bitrate=1000000):
@@ -21,6 +22,9 @@ def load_motor_manager(motor_config_file_path, channel='can0', bustype='socketca
     for motor_config in motor_configs:
         if motor_config['vendor_type'] == 'elmo':
             motor = ELMOLoader.load_motor(motor_config)
+            motor_manager.add_motor(motor)
+        elif motor_config['vendor_type'] == 'eRob':
+            motor = EROBLoader.load_motor(motor_config)
             motor_manager.add_motor(motor)
 
     return motor_manager

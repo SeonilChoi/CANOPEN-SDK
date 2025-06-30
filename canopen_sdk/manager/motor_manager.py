@@ -45,10 +45,10 @@ class MotorManager:
             motor.initialize_motor()
         self.pause_for_seconds(0.5)
 
-    def configure_all_PDO_mapping(self):
-        # Configure PDO Mapping
+    def setup_all_PDO_mapping(self):
+        # Setup PDO Mapping
         for motor in self.motors.values():
-            motor.configure_PDO_mapping()
+            motor.setup_pdo_mapping()
         
         # Start
         self.network.nmt.send_command(0x01)
@@ -63,7 +63,7 @@ class MotorManager:
     def add_all_PDO_callbacks(self):
         # Add PDO Callbacks
         for motor in self.motors.values():
-            motor.add_PDO_callback()
+            motor.add_pdo_callback()
         self.pause_for_seconds(0.5)
 
     def start_sync_all_motors(self, interval=0.01):
@@ -74,7 +74,7 @@ class MotorManager:
         self.initialize_all_motors()
 
         # PDO Mapping
-        self.configure_all_PDO_mapping()
+        self.setup_all_PDO_mapping()
 
         # Switch On
         self.command_all_switches_on()
@@ -98,6 +98,8 @@ class MotorManager:
 
         # Stop all nodes
         self.network.nmt.send_command(0x02)
+        
+        self.network.disconnect()
         
     def set_position(self, name, value):
         if name in self.motors:
