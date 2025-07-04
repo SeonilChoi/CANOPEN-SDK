@@ -5,6 +5,11 @@
 pip install -e .
 ```
 
+## Active CANable
+```
+source ./canable.sh
+```
+
 ## Requirements
 - canopen==2.3.0
 - python-can==4.5.0
