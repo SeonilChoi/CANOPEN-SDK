@@ -1,3 +1,4 @@
+import os
 import time
 import ctypes
 from abc import ABC, abstractmethod
@@ -16,19 +17,21 @@ class BaseMotorInterface(ABC):
     }
 
     def __init__(self, node_id, object_dictionary_file_path, 
-                 zero_offset=0, operation_mode='PROFILE_POSITION',
+                 name=None, pulse_per_revolution=1000, zero_offset=0, operation_mode='PROFILE_POSITION',
                  profile_velocity=1.0, profile_acceleration=1.0, profile_deceleration=1.0,
-                 name=None, pulse_per_revolution=1000):
+                 min_position_limit=-1.0, max_position_limit=1.0):
         self.node_id = node_id
         self.object_dictionary_file_path = object_dictionary_file_path
+        self.name = name if name is not None else f"joint_{node_id}"
+        self.pulse_per_revolution = pulse_per_revolution
         self.zero_offset = zero_offset
         self.operation_mode = operation_mode
         self.profile_velocity = profile_velocity
         self.profile_acceleration = profile_acceleration
         self.profile_deceleration = profile_deceleration
-        self.name = name if name is not None else f"joint_{node_id}"
-        self.pulse_per_revolution = pulse_per_revolution
-
+        self.min_position_limit = min_position_limit
+        self.max_position_limit = max_position_limit
+        
         self.node = None
         self.network = None
         self.dt = 0.01
@@ -49,7 +52,11 @@ class BaseMotorInterface(ABC):
             'switch_on_disabled': 0,
             'warning': 0,
         }
-        self.logger = Logger(f'logs/{self.name}.csv')
+        base_dir   = os.path.dirname(os.path.abspath(__file__))
+        parent_dir = os.path.dirname(base_dir)
+        parent_dir = os.path.dirname(parent_dir)
+        file_path  = os.path.join(parent_dir, 'logs', f'{self.name}.csv')
+        self.logger = Logger(file_path)
         
     @abstractmethod
     def initialize_motor(self):
@@ -119,7 +126,7 @@ class BaseMotorInterface(ABC):
 
     def to_unsigned_int32(self, value):
         """convert a value to an unsigned 32-bit integer"""
-        return ctypes.c_uint32(int(value)).value 
+        return ctypes.c_uint32(int(value)).value
     
     def to_signed_int32(self, value):
         """convert a value to a signed 32-bit integer"""
@@ -141,6 +148,10 @@ class BaseMotorInterface(ABC):
         """Get motor torque"""
         return self.current_torque
     
+    def get_position_range_limit(self):
+        """Get position range limit"""
+        return self.min_position_limit, self.max_position_limit
+
     def get_motor_state(self):
         """Get motor state"""
         return {
@@ -160,6 +171,10 @@ class BaseMotorInterface(ABC):
             'switch_on_disabled': self.motor_status['switch_on_disabled'],
             'warning': self.motor_status['warning'],
         }
+        
+    def close_logger(self):
+        """Close logger"""
+        self.logger.close()
     
     @abstractmethod
     def get_error_code(self):

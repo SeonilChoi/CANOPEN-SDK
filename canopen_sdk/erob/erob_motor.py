@@ -1,20 +1,21 @@
+import time
 from canopen_sdk.common import BaseMotorInterface
 
 PI = 3.141592653589793
 
 class EROB(BaseMotorInterface):
-    def __init__(self, node_id, object_dictionary_file_path,
-                 zero_offset=0, operation_mode='PROFILE_POSITION',
+    def __init__(self, node_id, object_dictionary_file_path, 
+                 name=None, pulse_per_revolution=1000, zero_offset=0, operation_mode='PROFILE_POSITION',
                  profile_velocity=1.0, profile_acceleration=1.0, profile_deceleration=1.0,
-                 name=None, pulse_per_revolution=1000):
-        super().__init__(node_id, object_dictionary_file_path, zero_offset, operation_mode,
+                 min_position_limit=-1.0, max_position_limit=1.0):
+        super().__init__(node_id, object_dictionary_file_path, 
+                         name, pulse_per_revolution, 
+                         zero_offset, operation_mode,
                          profile_velocity, profile_acceleration, profile_deceleration,
-                         name, pulse_per_revolution)
+                         min_position_limit, max_position_limit)
         self.PulseToRad = (2 * PI) / self.pulse_per_revolution
         self.RadToPulse = self.pulse_per_revolution / (2 * PI)
-        self.error_message = {
-            
-        }
+        self.error_message = {}
     
     def initialize_motor(self):
         # Fault Reset
@@ -42,6 +43,16 @@ class EROB(BaseMotorInterface):
 
         # Linear Lamp
         self.node.sdo['Motion profile type'].raw = 0
+        self.pause_for_seconds(0.1)
+
+        # Set Position range limit
+        self.node.sdo['Position range limit'][1].raw = self.to_signed_int32(
+            self.min_position_limit * self.RadToPulse
+        )
+        self.pause_for_seconds(0.1)
+        self.node.sdo['Position range limit'][2].raw = self.to_signed_int32(
+            self.max_position_limit * self.RadToPulse
+        )
         self.pause_for_seconds(0.1)
 
         # Shutdown
@@ -199,9 +210,6 @@ class EROB(BaseMotorInterface):
         # Quick Stop
         self.node.sdo['Controlword'].raw = 0x02
         self.pause_for_seconds(0.1)
-
-        # Close logger
-        self.logger.close()
         
     def set_position(self, value):        
         # Write Target Position
@@ -211,8 +219,9 @@ class EROB(BaseMotorInterface):
         # New set-point & Change set immediately
         self.node.rpdo[1]['Controlword'].raw = 0x103F # I don't understand why it works...
         self.node.rpdo[1].transmit()
-        self.pause_for_seconds(0.1)
-        
+        #self.pause_for_seconds(0.05)
+        time.sleep(0.02)
+
     def set_velocity(self, value):
         """
         This function is not implemented for the eRob motor.
@@ -229,19 +238,15 @@ class EROB(BaseMotorInterface):
         # Write Target Torque
         torque = value * 1000 / self.motor_rated_current
         self.node.rpdo[2]['Target torque'].raw = self.to_signed_int16(torque)
-
-        # Enable Operation
-        self.node.rpdo[2]['Controlword'].raw = 0x3F
+ 
+        # New set-point & Change set immediately
+        self.node.rpdo[2]['Controlword'].raw = 0x103F # I don't understand why it works...
         self.node.rpdo[2].transmit()
-        self.pause_for_seconds(0.01)
-
-        # New Set-point
-        self.node.rpdo[2]['Controlword'].raw = 0x0F 
-        self.node.rpdo[2].transmit()
-        self.pause_for_seconds(0.01)
+        #self.pause_for_seconds(0.05)
+        time.sleep(0.02)
     
     def get_error_code(self):
         # Error Code
-        error_code = self.node.sdo['Error code'].raw
+        error_code = self.node.sdo['Error Code'].raw
         return error_code
 

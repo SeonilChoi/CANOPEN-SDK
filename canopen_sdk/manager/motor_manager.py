@@ -88,6 +88,7 @@ class MotorManager:
 
         # Start Sync
         self.network.sync.start(interval)
+        self.pause_for_seconds(3.0)
         
     def stop_sync_all_motors(self):
         for motor in self.motors.values():
@@ -100,6 +101,9 @@ class MotorManager:
         self.network.nmt.send_command(0x02)
         
         self.network.disconnect()
+        
+        for motor in self.motors.values():
+            motor.close_logger()
         
     def set_position(self, name, value):
         if name in self.motors:
@@ -141,6 +145,12 @@ class MotorManager:
             torques[name] = motor.get_torque()
         return torques
     
+    def get_position_range_limits(self):
+        prl = {}
+        for name, motor in self.motors.items():
+            prl[name] = motor.get_position_range_limit()
+        return prl
+
     def get_motor_states(self):
         states = {}
         for name, motor in self.motors.items():
@@ -154,25 +164,24 @@ class MotorManager:
         return error_codes
     
     def check_motor_states(self):
-        is_error = False
-        motor_states = self.get_motor_states()
-        for _, state in motor_states.items():
-            if state['fault'] is True:
-                is_error = True
-                break
+        states = self.get_motor_states()
+        error_codes = self.get_error_codes()
 
-            if state['switch_on_disabled'] is True:
-                is_error = True
-                break
+        is_state_error = any(
+            s['fault'] or s['switch_on_disabled'] or not s['operation_enabled']
+            for s in states.values()
+        )
 
-            if state['operation_enabled'] is False:
-                is_error = True
-                break
+        is_error = any(
+            e != 0
+            for e in error_codes.values()
+        )
+
+        is_error = is_state_error or is_error
         if is_error:
-            error_codes = self.get_error_codes()
             self.stop_sync_all_motors()
-            return is_error, error_codes
-        return is_error, None
-    
+
+        return states, is_error, error_codes
+        
     def pause_for_seconds(self, value):
         time.sleep(value)
