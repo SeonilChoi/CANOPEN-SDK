@@ -5,7 +5,7 @@
 pip install -e .
 ```
 
-## Active CANable
+## Enable CANable
 ```
 source ./canable.sh
 ```
