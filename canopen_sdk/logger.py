@@ -4,6 +4,8 @@ import datetime
 
 class Logger:
     def __init__(self, filename):
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
+
         self.file = open(filename, 'w+t')
         self.keys = []
         self.separator = ','
