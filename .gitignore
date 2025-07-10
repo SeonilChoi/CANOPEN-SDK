@@ -7,5 +7,4 @@
 *.egg/
 
 # Ignore log files
-*.log
 logs/
