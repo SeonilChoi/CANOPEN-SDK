@@ -5,8 +5,10 @@ class MotorManager:
     def __init__(self, channel='can0', bustype='socketcan', bitrate=1000000):
         # CANOpen Network
         self.network = canopen.Network()
-        self.network.connect(channel=channel, bustype=bustype, bitrate=bitrate)
-
+        self.channel = channel
+        self.bustype = bustype
+        self.bitrate = bitrate
+       
         # Motor Config
         self.motors = {}
         self.name_to_id = {}
@@ -67,6 +69,9 @@ class MotorManager:
         self.pause_for_seconds(0.5)
 
     def start_sync_all_motors(self, interval=0.01):
+        # Connect
+        self.network.connect(channel=self.channel, bustype=self.bustype, bitrate=self.bitrate)
+
         # Reset
         self.reset_all_motors()
 
@@ -90,7 +95,7 @@ class MotorManager:
         self.network.sync.start(interval)
         self.pause_for_seconds(3.0)
         
-    def stop_sync_all_motors(self):
+    def stop_sync_all_motors(self, close_logger=True):
         for motor in self.motors.values():
             motor.command_quick_stop()
         
@@ -102,8 +107,9 @@ class MotorManager:
         
         self.network.disconnect()
         
-        for motor in self.motors.values():
-            motor.close_logger()
+        if close_logger:
+            for motor in self.motors.values():
+                motor.close_logger()
         
     def set_position(self, name, value):
         if name in self.motors:
@@ -182,6 +188,15 @@ class MotorManager:
             self.stop_sync_all_motors()
 
         return states, is_error, error_codes
+
+    def reset_node_id(self, name, node_id):
+        self.motors[name].reset_node_id(node_id)
+        self.network.nmt.send_command(0x82)
+        self.pause_for_seconds(1.0)
+        
+        self.motors[name].node_id = node_id
+        self.stop_sync_all_motors(close_logger=False)
+        self.start_sync_all_motors()
         
     def pause_for_seconds(self, value):
         time.sleep(value)

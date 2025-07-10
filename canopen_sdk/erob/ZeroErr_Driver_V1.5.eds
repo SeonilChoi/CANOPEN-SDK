@@ -73,6 +73,20 @@ PDOMapping=1
 LowLimit=0
 HighLimit=0xFF
 
+[100B]
+ParameterName=Node ID
+ObjectType=0x7
+DataType=0x0005
+AccessType=rw
+DefaultValue=0x01
+PDOMapping=0
+LowLimit=0x00
+HighLimit=0x7F
+ObjFlags=NV
+
+[100Bsub0]
+SubNumber=1
+
 [1018]
 ParameterName=Identity Object
 ObjectType=0x9
@@ -166,7 +180,6 @@ SupportedObjects=79
 50=0x6078
 51=0x6079
 52=0x607A
-80=0x607B
 53=0x607C
 54=0x607D
 55=0x607F
@@ -1659,33 +1672,6 @@ AccessType=rww
 DefaultValue=0
 PDOMapping=1
 ObjFlags=0x0
-
-[607B]
-ParameterName=Position range limit
-ObjectType=0x8
-Index=0x607B
-SubNumber=2
-PDOMapping=0
-
-[607Bsub1]
-ParameterName=Min position range limit
-ObjectType=0x7
-DataType=0x0004
-AccessType=rw
-DefaultValue=0x80000000
-LowLimit=0x80000000
-HighLimit=0x7FFFFFFF
-PDOMapping=0
-
-[607Bsub2]
-ParameterName=Max position range limit
-ObjectType=0x7
-DataType=0x0004
-AccessType=rw
-DefaultValue=0x7FFFFFFF
-LowLimit=0x80000000
-HighLimit=0x7FFFFFFF
-PDOMapping=0
 
 [607C]
 ParameterName=Home offset

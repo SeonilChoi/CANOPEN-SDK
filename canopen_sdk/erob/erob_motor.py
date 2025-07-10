@@ -46,13 +46,17 @@ class EROB(BaseMotorInterface):
         self.pause_for_seconds(0.1)
 
         # Set Position range limit
-        self.node.sdo['Position range limit'][1].raw = self.to_signed_int32(
+        self.node.sdo['Software position limit'][1].raw = self.to_signed_int32(
             self.min_position_limit * self.RadToPulse
         )
         self.pause_for_seconds(0.1)
-        self.node.sdo['Position range limit'][2].raw = self.to_signed_int32(
+        self.node.sdo['Software position limit'][2].raw = self.to_signed_int32(
             self.max_position_limit * self.RadToPulse
         )
+        self.pause_for_seconds(0.1)
+
+        # Read Motor Rated Current (mA)
+        self.motor_rated_current = self.node.sdo['Motor rated current'].raw
         self.pause_for_seconds(0.1)
 
         # Shutdown
@@ -128,10 +132,6 @@ class EROB(BaseMotorInterface):
         self.node.tpdo.save()
         self.node.rpdo.save()
         self.node.nmt.state = 'OPERATIONAL'
-        
-        # Read Motor Rated Current (mA)
-        self.motor_rated_current = self.node.sdo['Motor rated current'].raw
-        self.pause_for_seconds(0.1)
 
     def add_pdo_callback(self):
         # Add TPDO 1 callback
@@ -211,7 +211,7 @@ class EROB(BaseMotorInterface):
         self.node.sdo['Controlword'].raw = 0x02
         self.pause_for_seconds(0.1)
         
-    def set_position(self, value):        
+    def set_position(self, value):
         # Write Target Position
         position = value * self.RadToPulse + self.zero_offset
         self.node.rpdo[1]['Target Position'].raw = self.to_signed_int32(position)
@@ -244,7 +244,14 @@ class EROB(BaseMotorInterface):
         self.node.rpdo[2].transmit()
         #self.pause_for_seconds(0.05)
         time.sleep(0.02)
-    
+
+    def reset_node_id(self, node_id):
+        self.node.sdo[0x100B].raw = node_id
+        self.pause_for_seconds(0.1)
+
+        self.node.sdo[0x1010][1].raw = 0x65766173
+        self.pause_for_seconds(0.1)
+        
     def get_error_code(self):
         # Error Code
         error_code = self.node.sdo['Error Code'].raw

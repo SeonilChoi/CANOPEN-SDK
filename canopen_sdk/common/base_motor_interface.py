@@ -171,6 +171,11 @@ class BaseMotorInterface(ABC):
             'switch_on_disabled': self.motor_status['switch_on_disabled'],
             'warning': self.motor_status['warning'],
         }
+ 
+    @abstractmethod
+    def reset_node_id(self, node_id):
+        """"Reset the node ID"""
+        pass
         
     def close_logger(self):
         """Close logger"""
