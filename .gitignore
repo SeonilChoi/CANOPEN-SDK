@@ -5,6 +5,3 @@
 # Ignore egg info directories
 *.egg-info/
 *.egg/
-
-# Ignore log files
-*.csv
