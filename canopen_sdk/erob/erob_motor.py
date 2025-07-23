@@ -59,18 +59,6 @@ class EROB(BaseMotorInterface):
         self.motor_rated_current = self.node.sdo['Motor rated current'].raw
         self.pause_for_seconds(0.1)
 
-        # Shutdown
-        self.node.sdo['Controlword'].raw = 0x06
-        self.pause_for_seconds(0.1)
-
-        # Switch On
-        self.node.sdo['Controlword'].raw = 0x07
-        self.pause_for_seconds(0.1)
-
-        # Enable Operation
-        self.node.sdo['Controlword'].raw = 0x0F
-        self.pause_for_seconds(0.1)
-        
     def reset_motor(self):
         # Fault Reset
         self.node.sdo['Controlword'].raw = 0x80
