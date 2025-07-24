@@ -43,20 +43,21 @@ class BaseMotorInterface(ABC):
         self.motor_rated_current = 0
         self.motor_status = {
             'statusword': None,
-            'ready_to_switch_on': 0,
-            'switched_on': 0,
+            #'ready_to_switch_on': 0,
+            #'switched_on': 0,
             'operation_enabled': 0,
             'fault': 0,
-            'voltage_enabled': 0,
-            'quick_stop': 0,
+            #'voltage_enabled': 0,
+            #'quick_stop': 0,
             'switch_on_disabled': 0,
-            'warning': 0,
+            #'warning': 0,
         }
+        self.error_code = 0
         base_dir   = os.path.dirname(os.path.abspath(__file__))
         parent_dir = os.path.dirname(base_dir)
         parent_dir = os.path.dirname(parent_dir)
         file_path  = os.path.join(parent_dir, 'logs', f'{self.name}.csv')
-        self.logger = Logger(file_path)
+        #self.logger = Logger(file_path)
         
     @abstractmethod
     def initialize_motor(self):
@@ -155,22 +156,31 @@ class BaseMotorInterface(ABC):
     def get_motor_state(self):
         """Get motor state"""
         return {
-            'node_id': self.node_id,
-            'name': self.name,
+            #'node_id': self.node_id,
+            #'name': self.name,
             'position': self.current_position,
             'velocity': self.current_velocity,
             'acceleration': self.current_acceleration,
             'torque': self.current_torque,
             'statusword': self.motor_status['statusword'],
-            'ready_to_switch_on': self.motor_status['ready_to_switch_on'],
-            'switched_on': self.motor_status['switched_on'],
+            #'ready_to_switch_on': self.motor_status['ready_to_switch_on'],
+            #'switched_on': self.motor_status['switched_on'],
             'operation_enabled': self.motor_status['operation_enabled'],
             'fault': self.motor_status['fault'],
-            'voltage_enabled': self.motor_status['voltage_enabled'],
-            'quick_stop': self.motor_status['quick_stop'],
+            #'voltage_enabled': self.motor_status['voltage_enabled'],
+            #'quick_stop': self.motor_status['quick_stop'],
             'switch_on_disabled': self.motor_status['switch_on_disabled'],
-            'warning': self.motor_status['warning'],
+            #'warning': self.motor_status['warning'],
         }
+ 
+    def get_error_code(self):
+        """
+        Get Error Code
+        # Error Code
+        error_code = self.node.sdo['Error Code'].raw
+        return error_code
+        """
+        return self.error_code
  
     @abstractmethod
     def reset_node_id(self, node_id):
@@ -178,10 +188,6 @@ class BaseMotorInterface(ABC):
         pass
         
     def close_logger(self):
-        """Close logger"""
-        self.logger.close()
-    
-    @abstractmethod
-    def get_error_code(self):
-        """Get error code"""
         pass
+        """Close logger"""
+        #self.logger.close()

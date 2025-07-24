@@ -60,6 +60,7 @@ class EROB(BaseMotorInterface):
         self.pause_for_seconds(0.1)
 
     def reset_motor(self):
+        """
         # Fault Reset
         self.node.sdo['Controlword'].raw = 0x80
         self.pause_for_seconds(0.1)
@@ -75,7 +76,17 @@ class EROB(BaseMotorInterface):
         # Enable Operation
         self.node.sdo['Controlword'].raw = 0x0F
         self.pause_for_seconds(0.1)
-       
+        """
+
+        self.node.sdo['Controlword'].raw = 0x27
+        self.pause_for_seconds(0.1)
+        
+        self.node.sdo['Controlword'].raw = 0x26
+        self.pause_for_seconds(0.1)
+        
+        self.node.sdo['Controlword'].raw = 0x80
+        self.pause_for_seconds(0.1)
+    
     def setup_pdo_mapping(self):
         # Read PDO setting
         self.node.tpdo.read()
@@ -84,7 +95,7 @@ class EROB(BaseMotorInterface):
         # TPDO 1 mapping (motor -> controller)
         self.node.tpdo[1].clear()
         self.node.tpdo[1].add_variable('Statusword')
-        self.node.tpdo[1].add_variable('Position actual value')
+        self.node.tpdo[1].add_variable('Error Code')
         self.node.tpdo[1].cob_id = 0x180 + self.node_id
         self.node.tpdo[1].trans_type = 1
         self.node.tpdo[1].event_timer = 0
@@ -92,12 +103,20 @@ class EROB(BaseMotorInterface):
 
         # TPDO 2 mapping
         self.node.tpdo[2].clear()
+        self.node.tpdo[2].add_variable('Position actual value')
         self.node.tpdo[2].add_variable('Torque sensor')
-        self.node.tpdo[2].add_variable('Velocity actual value')
         self.node.tpdo[2].cob_id = 0x280 + self.node_id
         self.node.tpdo[2].trans_type = 1
         self.node.tpdo[2].event_timer = 0
         self.node.tpdo[2].enabled = True
+        
+        # TPDO 3 mapping
+        self.node.tpdo[3].clear()
+        self.node.tpdo[3].add_variable('Velocity actual value')
+        self.node.tpdo[3].cob_id = 0x380 + self.node_id
+        self.node.tpdo[3].trans_type = 1
+        self.node.tpdo[3].event_timer = 0
+        self.node.tpdo[3].enabled = True
 
         # RPDO 1 mapping (controller -> motor)
         self.node.rpdo[1].clear()
@@ -130,6 +149,10 @@ class EROB(BaseMotorInterface):
         self.network.subscribe(self.node.tpdo[2].cob_id, self.node.tpdo[2].on_message)
         self.node.tpdo[2].add_callback(self.tpdo_2_callback)
         
+        # Add TPDO 3 callback
+        self.network.subscribe(self.node.tpdo[3].cob_id, self.node.tpdo[3].on_message)
+        self.node.tpdo[3].add_callback(self.tpdo_3_callback)
+        
     def tpdo_1_callback(self, message):
         # Read Statusword
         current_statusword = int.from_bytes(message.data[0:2], byteorder='little', signed=False)
@@ -138,19 +161,18 @@ class EROB(BaseMotorInterface):
         previous_statusword = self.motor_status.get('statusword', None)
         if previous_statusword is None or previous_statusword != current_statusword:
             self.motor_status['statusword'] = current_statusword
-            self.motor_status['ready_to_switch_on'] = bool(current_statusword & (1 << 0))
-            self.motor_status['switched_on'] = bool(current_statusword & (1 << 1))
+            #self.motor_status['ready_to_switch_on'] = bool(current_statusword & (1 << 0))
+            #self.motor_status['switched_on'] = bool(current_statusword & (1 << 1))
             self.motor_status['operation_enabled'] = bool(current_statusword & (1 << 2))
             self.motor_status['fault'] = bool(current_statusword & (1 << 3))
             self.motor_status['voltage_enabled'] = bool(current_statusword & (1 << 4))
-            self.motor_status['quick_stop'] = bool(current_statusword & (1 << 5))
+            #self.motor_status['quick_stop'] = bool(current_statusword & (1 << 5))
             self.motor_status['switch_on_disabled'] = bool(current_statusword & (1 << 6))
-            self.motor_status['warning'] = bool(current_statusword & (1 << 7))
+            #self.motor_status['warning'] = bool(current_statusword & (1 << 7))
 
-        # Read position
-        position = int.from_bytes(message.data[2:6], byteorder='little', signed=True)
-        self.current_position = (position - self.zero_offset) * self.PulseToRad
+        self.error_code = int.from_bytes(message.data[2:4], byteorder='little', signed=False)
         
+        """
         # Write to logger
         self.logger.write_key_values({
             'position': self.current_position,
@@ -167,14 +189,20 @@ class EROB(BaseMotorInterface):
             'switch_on_disabled': self.motor_status['switch_on_disabled'],
             'warning': self.motor_status['warning']
         })
+        """
 
     def tpdo_2_callback(self, message):
+        # Read position
+        position = int.from_bytes(message.data[0:4], byteorder='little', signed=True)
+        self.current_position = (position - self.zero_offset) * self.PulseToRad
+        
         # Read Torque
-        torque = int.from_bytes(message.data[0:4], byteorder='little', signed=True)
+        torque = int.from_bytes(message.data[4:8], byteorder='little', signed=True)
         self.current_torque = torque / 1000
         
+    def tpdo_3_callback(self, message):
         # Read Velocity
-        velocity = int.from_bytes(message.data[4:8], byteorder='little', signed=True)
+        velocity = int.from_bytes(message.data[0:4], byteorder='little', signed=True)
         self.current_velocity = velocity * self.PulseToRad
         
         # Compute Acceleration
@@ -182,6 +210,7 @@ class EROB(BaseMotorInterface):
         self.previous_velocity = self.current_velocity
 
     def command_switch_on(self):
+        """
         # Shutdown
         self.node.sdo['Controlword'].raw = 0x06
         self.pause_for_seconds(0.1)
@@ -193,10 +222,29 @@ class EROB(BaseMotorInterface):
         # Enable Operation
         self.node.sdo['Controlword'].raw = 0x0F
         self.pause_for_seconds(0.1)
+        """
+        
+        self.node.rpdo[1]['Controlword'].raw = 0x06
+        self.node.rpdo[1].transmit()
+        self.pause_for_seconds(0.1)
+        
+        self.node.rpdo[1]['Controlword'].raw = 0x07
+        self.node.rpdo[1].transmit()
+        self.pause_for_seconds(0.1)
+        
+        self.node.rpdo[1]['Controlword'].raw = 0x0F
+        self.node.rpdo[1].transmit()
+        self.pause_for_seconds(0.1)
         
     def command_quick_stop(self):
+        """
         # Quick Stop
-        self.node.sdo['Controlword'].raw = 0x02
+        self.node.sdo['Controlword'].raw = 0.02
+        self.pause_for_seconds(0.1)
+        """
+        
+        self.node.rpdo[1]['Controlword'].raw = 0x02
+        self.node.rpdo[1].transmit()
         self.pause_for_seconds(0.1)
         
     def set_position(self, value):
@@ -240,8 +288,3 @@ class EROB(BaseMotorInterface):
         self.node.sdo[0x1010][1].raw = 0x65766173
         self.pause_for_seconds(0.1)
         
-    def get_error_code(self):
-        # Error Code
-        error_code = self.node.sdo['Error Code'].raw
-        return error_code
-

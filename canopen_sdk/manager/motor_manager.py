@@ -95,21 +95,22 @@ class MotorManager:
         self.network.sync.start(interval)
         self.pause_for_seconds(3.0)
         
-    def stop_sync_all_motors(self, close_logger=True):
+    def stop_sync_all_motors(self):
+        # Quick Stop
         for motor in self.motors.values():
             motor.command_quick_stop()
         
         # Stop Sync
         self.network.sync.stop()
-
+        
         # Stop all nodes
         self.network.nmt.send_command(0x02)
         
         self.network.disconnect()
         
-        if close_logger:
-            for motor in self.motors.values():
-                motor.close_logger()
+        #if close_logger:
+        #    for motor in self.motors.values():
+        #        motor.close_logger()
         
     def set_position(self, name, value):
         if name in self.motors:
@@ -172,7 +173,7 @@ class MotorManager:
     def check_motor_states(self):
         states = self.get_motor_states()
         error_codes = self.get_error_codes()
-
+        
         is_state_error = any(
             s['fault'] or s['switch_on_disabled'] or not s['operation_enabled']
             for s in states.values()
@@ -186,17 +187,18 @@ class MotorManager:
         is_error = is_state_error or is_error
         if is_error:
             self.stop_sync_all_motors()
-
+        
         return states, is_error, error_codes
-
+        
     def reset_node_id(self, name, node_id):
         self.motors[name].reset_node_id(node_id)
         self.network.nmt.send_command(0x82)
         self.pause_for_seconds(1.0)
         
         self.motors[name].node_id = node_id
-        self.stop_sync_all_motors(close_logger=False)
+        self.stop_sync_all_motors()
         self.start_sync_all_motors()
         
     def pause_for_seconds(self, value):
         time.sleep(value)
+        
