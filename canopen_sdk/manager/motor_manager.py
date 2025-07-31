@@ -71,6 +71,7 @@ class MotorManager:
     def start_sync_all_motors(self, interval=0.01):
         # Connect
         self.network.connect(channel=self.channel, bustype=self.bustype, bitrate=self.bitrate)
+        self.pause_for_seconds(0.1)
 
         # Reset
         self.reset_all_motors()
@@ -81,25 +82,25 @@ class MotorManager:
         # PDO Mapping
         self.setup_all_PDO_mapping()
 
-        # Switch On
-        self.command_all_switches_on()
-
         # PDO Callbacks
         self.add_all_PDO_callbacks()
-
-        # Set dt
-        for motor in self.motors.values():
-            motor.set_dt(interval)
 
         # Start Sync
         self.network.sync.start(interval)
         self.pause_for_seconds(3.0)
+
+        # Switch On
+        self.command_all_switches_on()
+
+        # Set dt
+        for motor in self.motors.values():
+            motor.set_dt(interval)
         
     def stop_sync_all_motors(self):
         # Quick Stop
         for motor in self.motors.values():
             motor.command_quick_stop()
-        
+
         # Stop Sync
         self.network.sync.stop()
         

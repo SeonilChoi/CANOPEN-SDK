@@ -1,3 +1,3 @@
-sudo slcand -o -s8 -t hw -S 1000000 /dev/ttyACM47 can0
-sudo ip link set can0 up
-sudo ip link set can0 txqueuelen 1000
+sudo slcand -o -s8 -t hw -S 1000000 /dev/ttyACM24 can1
+sudo ip link set can1 up
+sudo ip link set can1 txqueuelen 1000

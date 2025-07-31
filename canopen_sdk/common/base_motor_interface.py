@@ -31,6 +31,7 @@ class BaseMotorInterface(ABC):
         self.profile_deceleration = profile_deceleration
         self.min_position_limit = min_position_limit
         self.max_position_limit = max_position_limit
+        self.start_position = 0.0
         
         self.node = None
         self.network = None
