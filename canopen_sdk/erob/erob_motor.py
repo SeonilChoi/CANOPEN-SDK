@@ -81,7 +81,6 @@ class EROB(BaseMotorInterface):
         self.node.tpdo[1].event_timer = 0
         self.node.tpdo[1].enabled = True
         
-        """
         # TPDO 2 mapping
         self.node.tpdo[2].clear()
         self.node.tpdo[2].add_variable('Velocity actual value')
@@ -90,7 +89,6 @@ class EROB(BaseMotorInterface):
         self.node.tpdo[2].trans_type = 1
         self.node.tpdo[2].event_timer = 0
         self.node.tpdo[2].enabled = True
-        """
         
         # RPDO 1 mapping (controller -> motor)
         self.node.rpdo[1].clear()
@@ -110,11 +108,9 @@ class EROB(BaseMotorInterface):
         self.network.subscribe(self.node.tpdo[1].cob_id, self.node.tpdo[1].on_message)
         self.node.tpdo[1].add_callback(self.tpdo_1_callback)
 
-        """
         # Add TPDO 2 callback
         self.network.subscribe(self.node.tpdo[2].cob_id, self.node.tpdo[2].on_message)
         self.node.tpdo[2].add_callback(self.tpdo_2_callback)
-        """
         
         # Add TPDO 3 callback
         #self.network.subscribe(self.node.tpdo[3].cob_id, self.node.tpdo[3].on_message)
@@ -141,7 +137,6 @@ class EROB(BaseMotorInterface):
         position = int.from_bytes(message.data[2:6], byteorder='little', signed=True)
         self.current_position = (position - self.zero_offset) * self.PulseToRad
     
-    """
     def tpdo_2_callback(self, message):
         # Read Velocity
         velocity = int.from_bytes(message.data[0:4], byteorder='little', signed=True)
@@ -150,11 +145,10 @@ class EROB(BaseMotorInterface):
         # Compute Acceleration
         self.current_acceleration = (self.current_velocity - self.previous_velocity) / self.dt
         self.previous_velocity = self.current_velocity
-
+        
         # Read Torque
         torque = int.from_bytes(message.data[4:8], byteorder='little', signed=True)
         self.current_torque = torque / 1000
-    """
        
     def command_switch_on(self):
         self.node.rpdo[1]['Controlword'].raw = 0x26
