@@ -175,14 +175,12 @@ class BaseMotorInterface(ABC):
         }
  
     def get_error_code(self):
-        """
-        Get Error Code
+        """Get Error Code"""
         # Error Code
-        error_code = self.node.sdo['Error Code'].raw
-        return error_code
-        """
+        self.error_code = self.node.sdo['Error Code'].raw
+        self.pause_for_seconds(0.1)
         return self.error_code
- 
+        
     @abstractmethod
     def reset_node_id(self, node_id):
         """"Reset the node ID"""

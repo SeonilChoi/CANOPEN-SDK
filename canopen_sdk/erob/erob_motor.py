@@ -37,6 +37,9 @@ class EROB(BaseMotorInterface):
         self.motor_rated_current = self.node.sdo['Motor rated current'].raw
         self.pause_for_seconds(0.1)
         
+        # Motor Constant
+        self.motor_constant = 294 / self.motor_rated_current
+        
         self.start_position = self.node.sdo['Position actual value'].raw
         self.pause_for_seconds(0.1)
 
@@ -84,7 +87,7 @@ class EROB(BaseMotorInterface):
         # TPDO 2 mapping
         self.node.tpdo[2].clear()
         self.node.tpdo[2].add_variable('Velocity actual value')
-        self.node.tpdo[2].add_variable('Torque sensor')
+        self.node.tpdo[2].add_variable('Torque actual value')
         self.node.tpdo[2].cob_id = 0x280 + self.node_id
         self.node.tpdo[2].trans_type = 1
         self.node.tpdo[2].event_timer = 0
@@ -147,8 +150,8 @@ class EROB(BaseMotorInterface):
         self.previous_velocity = self.current_velocity
         
         # Read Torque
-        torque = int.from_bytes(message.data[4:8], byteorder='little', signed=True)
-        self.current_torque = torque / 1000
+        torque = int.from_bytes(message.data[4:6], byteorder='little', signed=True)
+        self.current_torque = torque / 1000 * 294
        
     def command_switch_on(self):
         self.node.rpdo[1]['Controlword'].raw = 0x26

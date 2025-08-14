@@ -173,23 +173,36 @@ class MotorManager:
     
     def check_motor_states(self):
         states = self.get_motor_states()
-        error_codes = self.get_error_codes()
         
+        error_motor = []
+        is_state_error = False
+        for k, v in states.items():
+            if v['fault'] or v['switch_on_disabled'] or not v['operation_enabled']:
+                error_motor.append(k)
+                is_state_error = True
+                break
+        """
         is_state_error = any(
-            s['fault'] or s['switch_on_disabled'] or not s['operation_enabled']
-            for s in states.values()
+            v['fault'] or v['switch_on_disabled'] or not v['operation_enabled']
+            for k, v in states.items()
         )
-
-        is_error = any(
-            e != 0
-            for e in error_codes.values()
-        )
-
-        is_error = is_state_error or is_error
-        if is_error:
-            self.stop_sync_all_motors()
+        """
+        """
+        is_error = False
+        error_codes = {}
+        if is_state_error:
+            error_codes = self.get_error_codes()
         
-        return states, is_error, error_codes
+            is_error = any(
+                e != 0
+                for e in error_codes.values()
+            )
+
+            is_error = is_state_error or is_error
+            if is_error:
+                self.stop_sync_all_motors()
+        """
+        return states, is_state_error, error_motor
         
     def reset_node_id(self, name, node_id):
         self.motors[name].reset_node_id(node_id)
